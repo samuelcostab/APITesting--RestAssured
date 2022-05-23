@@ -3,6 +3,10 @@ package br.ce.scosta.rest;
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -33,6 +37,67 @@ public class VerbosHTTPTest {
 			.body("name", is("nameTest"))
 			.body("age", is(15))
 		;
+	}
+	
+	@Test
+	public void deveSalvarUsuarioUtilizandoMAP() {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("name", "UserMap");
+		params.put("age", 25);
+		
+		given()
+			.log().all()
+			.contentType("application/json")
+			.body(params)
+		.when()
+			.post("/users")
+		.then()
+			.log().all()
+			.statusCode(201)
+			.body("id", is(notNullValue()))
+			.body("name", is("UserMap"))
+			.body("age", is(25))
+		;
+	}
+	
+	@Test
+	public void deveSalvarUsuarioUtilizandoObject() {
+		User user = new User("UserMap", 25);
+		
+		given()
+			.log().all()
+			.contentType("application/json")
+			.body(user)
+		.when()
+			.post("/users")
+		.then()
+			.log().all()
+			.statusCode(201)
+			.body("id", is(notNullValue()))
+			.body("name", is("UserMap"))
+			.body("age", is(25))
+		;
+	}
+	
+	@Test
+	public void deveDeserializarUsuarioSalvo() {
+		User user = new User("UserDeserializado", 25);
+		
+		User usuarioDeserealizado = given()
+			.log().all()
+			.contentType("application/json")
+			.body(user)
+		.when()
+			.post("/users")
+		.then()
+			.log().all()
+			.statusCode(201)
+			.extract().body().as(User.class)
+		;
+
+		Assert.assertThat(usuarioDeserealizado.getId(), notNullValue());
+		Assert.assertEquals(usuarioDeserealizado.getName(), "UserDeserializado");
+		Assert.assertThat(usuarioDeserealizado.getAge(), is(25));
 	}
 	
 	@Test
